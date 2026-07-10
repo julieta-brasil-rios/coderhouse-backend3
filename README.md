@@ -1,73 +1,77 @@
-# ShipNow API — Arquitectura por Capas
+# ShipNow API — Pre-entrega Módulo 1
 
-Refactor de la API monolítica de ShipNow a una arquitectura profesional
-**Controller → Service → Repository**, con configuración de entorno
-validada al arranque y constantes de dominio centralizadas.
+Este es el refactor de la API de ShipNow que pasé de un solo archivo gigante
+a una arquitectura por capas (Controller - Service - Repository). También le
+agregué validación de variables de entorno para que la app no arranque si
+falta algo importante.
 
-## Estructura
+## Cómo está organizado
 
-```
+
 src/
-  config/         # Validación y exportación de variables de entorno
-  constants/      # Roles, estados y códigos HTTP (Object.freeze)
-  models/         # Esquemas de Mongoose (sin lógica de negocio)
-  repositories/    # Único lugar que conoce Mongoose/MongoDB
-  services/       # Lógica de negocio
-  controllers/    # Única puerta de entrada HTTP
-  routes/         # Solo conectan path -> método del Controller
-  middlewares/    # Manejo centralizado de errores
-  utils/          # ApiError y otros helpers
-server.js         # Punto de entrada: valida env, conecta Mongo, levanta server
+config/        -> acá se valida el .env y se conecta a Mongo
+constants/     -> roles, estados de producto y códigos HTTP, todo centralizado
+models/        -> los schemas de Mongoose, nada más
+repositories/  -> lo único que habla con Mongoose directamente
+services/      -> toda la lógica de negocio
+controllers/   -> reciben el request y devuelven la respuesta
+routes/        -> solo conectan la ruta con el controller
+middlewares/   -> manejo de errores
+server.js        -> arranca todo
+
+
+
+La idea es que las cosas fluyan así: `Router -> Controller -> Service -> Repository`.
+El Controller nunca toca Mongoose directamente, siempre le pregunta al Service.
+
+## Cómo correrlo
+
+1. Instalar dependencias:
+```bash
+npm install
 ```
 
-Flujo de dependencias: `Router → Controller → Service → Repository → Mongoose`.
-El Controller **nunca** importa Mongoose directamente; si necesita datos,
-se los pide al Service.
+2. Copiar el `.env.example` y completarlo con tus datos:
+```bash
+cp .env.example .env
+```
+Le tenés que poner el `PORT`, el `MONGODB_URI` (local o de Atlas) y `NODE_ENV`.
 
-## Cómo correr el proyecto localmente
+3. Levantar el server:
+```bash
+npm start
+```
 
-1. Clonar el repo e instalar dependencias:
-   ```bash
-   git clone <url-del-repo>
-   cd shipnow-api
-   npm install
-   ```
+4. Para chequear que anda, entrás a `http://localhost:3000/health` y te
+tiene que devolver que está todo ok.
 
-2. Crear el archivo `.env` a partir del ejemplo:
-   ```bash
-   cp .env.example .env
-   ```
-   Completar `PORT`, `MONGODB_URI` (por ejemplo `mongodb://localhost:27017/shipnow`
-   o tu connection string de Atlas) y `NODE_ENV=development`.
+## Endpoints
 
-3. Levantar el servidor:
-   ```bash
-   npm run dev   # con nodemon
-   # o
-   npm start
-   ```
+**Products**
+- GET `/api/products` - lista todos
+- GET `/api/products/:id` - uno solo
+- POST `/api/products` - crea
+- PUT `/api/products/:id` - edita
+- DELETE `/api/products/:id` - borra
 
-4. Probar que está vivo: `GET http://localhost:3000/health`
+**Users**
+- GET `/api/users` - lista todos
+- POST `/api/users/register` - registra uno nuevo
+- POST `/api/users/login` - login
+- DELETE `/api/users/:id` - borra (solo un ADMIN puede)
 
-### Endpoints principales
+## Por qué separé la lógica como la separé
 
-| Método | Ruta                  | Descripción                     |
-|--------|-----------------------|----------------------------------|
-| GET    | /api/products         | Lista productos                 |
-| GET    | /api/products/:id     | Detalle de un producto          |
-| POST   | /api/products         | Crea un producto                |
-| PUT    | /api/products/:id     | Actualiza un producto           |
-| DELETE | /api/products/:id     | Borra (soft delete) un producto |
-| GET    | /api/users            | Lista usuarios                  |
-| POST   | /api/users/register   | Registra un usuario             |
-| POST   | /api/users/login      | Login                           |
-| DELETE | /api/users/:id        | Borra un usuario (solo ADMIN)   |
+Lo que traté de hacer fue que el Repository solo se ocupe de ir a buscar
+o guardar datos en Mongo, sin pensar. Y que el Service sea el que decide
+qué significan esos datos: por ejemplo, si un producto está "disponible"
+no es solo un dato que está en la base, es una regla (que tenga stock y
+que no esté descontinuado), y esa regla vive en el Service. Lo mismo con
+los permisos: que solo un ADMIN pueda borrar algo es una decisión de
+negocio, no algo que tenga que saber el Repository.
 
-### Robustez de la configuración
+## Sobre la validación del .env
 
-Si borrás `MONGODB_URI` (o cualquier variable crítica) del `.env`, la
-app **no arranca**: `src/config/env.config.js` valida las variables
-requeridas apenas se importa, y lanza un error descriptivo antes de que
-`server.js` intente conectar a Mongo o levantar el puerto.
-
-
+Si borrás `MONGODB_URI` del `.env` y tratás de levantar el server, no
+arranca. Tira un error que te dice justo qué variable falta, antes de
+siquiera intentar conectarse a la base. Eso está en `config/env.config.js`.
