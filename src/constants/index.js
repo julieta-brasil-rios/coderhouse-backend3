@@ -1,10 +1,3 @@
-/**
- * src/constants/index.js
- *
- * Diccionario único de valores inmutables del dominio.
- * Nada en el código debería usar los strings "ADMIN", "USER",
- * "AVAILABLE", etc. sueltos: siempre a través de estos objetos.
- */
 
 const ROLES = Object.freeze({
   ADMIN: 'ADMIN',
