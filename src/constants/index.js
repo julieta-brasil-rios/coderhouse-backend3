@@ -2,12 +2,35 @@
 const ROLES = Object.freeze({
   ADMIN: 'ADMIN',
   USER: 'USER',
+  REPARTIDOR: 'REPARTIDOR',
 });
 
 const PRODUCT_STATUS = Object.freeze({
   AVAILABLE: 'AVAILABLE',
   OUT_OF_STOCK: 'OUT_OF_STOCK',
   DISCONTINUED: 'DISCONTINUED',
+});
+
+const ORDER_STATUS = Object.freeze({
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  IN_PREPARATION: 'IN_PREPARATION',
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+});
+
+const ORDER_PRIORITY = Object.freeze({
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+});
+
+const DELIVERY_STATUS = Object.freeze({
+  ASSIGNED: 'ASSIGNED',
+  IN_TRANSIT: 'IN_TRANSIT',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
 });
 
 const HTTP_STATUS = Object.freeze({
@@ -22,4 +45,11 @@ const HTTP_STATUS = Object.freeze({
   INTERNAL_ERROR: 500,
 });
 
-module.exports = { ROLES, PRODUCT_STATUS, HTTP_STATUS };
+module.exports = {
+  ROLES,
+  PRODUCT_STATUS,
+  HTTP_STATUS,
+  ORDER_STATUS,
+  ORDER_PRIORITY,
+  DELIVERY_STATUS,
+};

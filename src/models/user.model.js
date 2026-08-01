@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       default: ROLES.USER,
     },
     isDeleted: { type: Boolean, default: false },
+    isMock: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
